@@ -44,6 +44,6 @@ CREATE VIEW nonsequential_comments AS SELECT * FROM (SELECT
 FROM count_comments WINDOW serial_window AS (ORDER BY serial ASC)) AS t0 WHERE NOT sequential ORDER BY value;
 GRANT SELECT ON nonsequential_comments TO livecounting_read;
 
-CREATE VIEW contributors AS SELECT DISTINCT author, COUNT(*) OVER (PARTITION BY author) AS contribution_count
-FROM count_comments;
+CREATE VIEW contributors AS SELECT DISTINCT author, COUNT(*) AS contribution_count
+FROM count_comments GROUP BY author;
 GRANT SELECT ON contributors TO livecounting_read;

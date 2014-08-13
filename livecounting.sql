@@ -1,36 +1,49 @@
-CREATE TABLE comments (
-  serial integer UNIQUE,
-  name text UNIQUE NOT NULL,
-  author text NOT NULL CHECK(author ~ E'^\\w{3,20}$'),
-  created_utc integer NOT NULL,
-  body text NOT NULL,
-  stricken boolean NOT NULL
+CREATE TABLE threads (
+  id SMALLSERIAL PRIMARY KEY,
+  reddit_id text NOT NULL,
+  category text,
+  name text,
+  creator text
 );
 
-CREATE FUNCTION get_value(body text) RETURNS integer AS $$
-  SELECT CAST(translate(translate(substring(body FROM E'^[~#*`_\\s\\[]*([1-9]\\d{0,2}(?:,? ?\\d{3})*),?(?:[^\\d,].*)?$'), ',', ''), ' ', '') AS integer)
-$$ LANGUAGE SQL;
+-- permissions for `threads`
+GRANT SELECT, INSERT, UPDATE, DELETE ON threads TO livecounting_write;
+GRANT SELECT ON threads TO livecounting_read;
 
-CREATE INDEX ON comments (serial);
-CREATE INDEX ON comments (get_value(body));
-GRANT SELECT, INSERT, UPDATE, DELETE ON comments TO livecounting_write;
-GRANT SELECT ON comments TO livecounting_read;
+CREATE TABLE valid_comments (
+  thread       smallint  NOT NULL REFERENCES threads (id),
+  serial       integer   NOT NULL,
+  name         text      UNIQUE NOT NULL,
+  permalink    text,
+  author       text      NOT NULL CHECK(author ~ E'^\\w{3,20}$'),
+  created_utc  integer   NOT NULL,
+  body         text      NOT NULL,
+  stricken     boolean   NOT NULL,
+  value        bigint    NOT NULL,
+  PRIMARY KEY (thread, serial)
+);
 
-CREATE VIEW valid_comments AS SELECT * FROM (SELECT
-  serial,
-  name,
-  author,
-  created_utc,
-  body,
-  get_value(body) AS value,
-  stricken
-FROM comments) AS t0
-WHERE value IS NOT NULL;
+-- I am not good at indexes but this should do okay
+CREATE INDEX ON valid_comments (thread, value, stricken, serial);
+CREATE INDEX ON valid_comments (serial);
+CREATE INDEX ON valid_comments (name);
+CREATE INDEX ON valid_comments (author);
+CREATE INDEX ON valid_comments (created_utc);
+
+-- permissions for `valid_comments`
+GRANT SELECT, INSERT, UPDATE, DELETE ON valid_comments TO livecounting_write;
 GRANT SELECT ON valid_comments TO livecounting_read;
 
-CREATE VIEW count_comments AS SELECT DISTINCT ON (value) *
-FROM valid_comments ORDER BY value, stricken ASC, serial ASC;
+-- selects a valid comment for each (thread, value) combination (there is almost always only one)
+CREATE VIEW count_comments AS SELECT DISTINCT ON (thread, value) *
+FROM valid_comments ORDER BY thread, value, stricken ASC, serial ASC;
+
+-- permissions for `count_comments`
 GRANT SELECT ON count_comments TO livecounting_read;
+
+--
+-- these should be moved to app logic at some point
+--
 
 CREATE VIEW nonsequential_comments AS SELECT * FROM (SELECT
   serial,

@@ -3,7 +3,9 @@ CREATE TABLE threads (
   reddit_id text NOT NULL,
   category text,
   name text,
-  creator text
+  creator text,
+  scheme_name text,
+  scheme_module text
 );
 
 -- permissions for `threads`

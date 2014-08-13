@@ -8,7 +8,7 @@ CREATE TABLE comments (
 );
 
 CREATE FUNCTION get_value(body text) RETURNS integer AS $$
-  SELECT CAST(translate(translate(substring(body FROM E'^[~#*`_\\s\\[]*([1-9]\\d{0,2}(?:, ?\\d{3})*|[1-9]\\d{3}),?(?:[^\\d,].*)?$'), ',', ''), ' ', '') AS integer)
+  SELECT CAST(translate(translate(substring(body FROM E'^[~#*`_\\s\\[]*([1-9]\\d{0,2}(?:,? ?\\d{3})*),?(?:[^\\d,].*)?$'), ',', ''), ' ', '') AS integer)
 $$ LANGUAGE SQL;
 
 CREATE INDEX ON comments (serial);

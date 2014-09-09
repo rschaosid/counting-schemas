@@ -1,4 +1,4 @@
 livecounting-schema
 ===================
 
-Postgresql data definition for livecounting
+Postgresql data definition for reddit counting

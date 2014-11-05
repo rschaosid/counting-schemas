@@ -65,22 +65,24 @@ GRANT SELECT ON liveupdate_thread_invitations TO counting_read;
 --
 
 CREATE TABLE things (
-  thread_id                smallint   NOT NULL,
-  FOREIGN KEY (thread_id) REFERENCES threads (thread_id),
-  
   -- comments
-  comment_link_id          integer,
   comment_id               bigint,
+  comment_link_id          integer,
   
   -- liveupdate updates
-  liveupdate_thread_flake  bytea,
-  liveupdate_update_id     uuid,
   liveupdate_position      integer,
+  liveupdate_update_id     uuid,
+  liveupdate_thread_flake  text,
   
   -- common
-  author                   text       CHECK (is_valid_username(author)),
   created                  timestamp,
+  created_high             timestamp,
+  thread_id                smallint   NOT NULL,
+  author                   text       CHECK (is_valid_username(author)),
+  original_author          text       CHECK (is_valid_username(true_author))
   body                     text,
+  
+  FOREIGN KEY (thread_id) REFERENCES threads (thread_id),
   
   -- row does not have both comment_id and liveupdate_update_id set
   CHECK (comment_id IS NULL OR liveupdate_update_id IS NULL),

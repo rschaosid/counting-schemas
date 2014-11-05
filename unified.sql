@@ -10,10 +10,6 @@ CREATE FUNCTION is_valid_shortname(shortname text) RETURNS boolean AS $$
   SELECT (shortname ~ E'^[\\w\\-]+$');
 $$ LANGUAGE sql;
 
-CREATE FUNCTION is_valid_simpleflake(flake bytea) RETURNS boolean AS $$
-  SELECT octet_length(flake) = 8;
-$$ LANGUAGE sql;
-
 --
 -- Threads
 --
@@ -44,7 +40,7 @@ GRANT SELECT ON threads TO counting_read;
 
 CREATE TABLE liveupdate_threads (
   thread_id smallint NOT NULL REFERENCES threads (thread_id),
-  liveupdate_thread_flake bytea UNIQUE NOT NULL CHECK (is_valid_simpleflake(thread_flake)),
+  liveupdate_thread_flake text UNIQUE NOT NULL,
   PRIMARY KEY (thread_id, thread_flake)
 );
 
@@ -98,9 +94,6 @@ CREATE TABLE things (
   -- liveupdate_update_id, liveupdate_thread_flake, and liveupdate_position are all set or all null
   CHECK (liveupdate_update_id IS NULL = liveupdate_thread_flake IS NULL
      AND liveupdate_update_id IS NULL = liveupdate_position IS NULL),
-  
-  FOREIGN KEY (thread_id, liveupdate_thread_flake)
-    REFERENCES liveupdate_threads (thread_id, liveupdate_thread_flake) MATCH SIMPLE,
   
   -- for updates, author and body are set
   CHECK ((author IS NOT NULL AND body IS NOT NULL) OR liveupdate_update_id IS NULL)

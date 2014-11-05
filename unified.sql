@@ -129,8 +129,8 @@ GRANT SELECT ON non_count_things TO counting_read;
 CREATE TABLE count_things (
   FOREIGN KEY (thread_id) REFERENCES threads (thread_id),
   
+  count_text               text,
   value                    integer    NOT NULL,
-  raw_value                integer,
   
   PRIMARY KEY (thread_id, value)
 ) INHERITS (things);

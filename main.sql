@@ -163,6 +163,7 @@ CREATE TABLE counts (
   value                    integer    NOT NULL,
   thread_id                smallint   NOT NULL REFERENCES threads (thread_id),
   author                   text       CHECK (is_valid_username(author)),
+  count_text               text,
 
   -- row does not have both comment_id and update_id set
   CHECK (comment_id IS NULL OR update_id IS NULL)
